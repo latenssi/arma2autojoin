@@ -55,7 +55,7 @@ class Arma2AutoJoin:
 		
 		subprocess.call(startup)
 	
-	def monitor(self, auto_connect=True):
+	def monitor(self, auto_connect=False):
 		while True:
 			self._query()
 			max_players = int(self.server_mon.info['maxplayers'])
@@ -107,7 +107,7 @@ def main(host=None, port=None):
 		exthreads=config.get('Settings', 'exThreads'),
 		maxmem=config.get('Settings', 'maxmem'),
 		)
-	aaj.monitor()
+	aaj.monitor(auto_connect=True)
 	
 if __name__ == "__main__":
 	try:
