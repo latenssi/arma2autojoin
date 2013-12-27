@@ -3,7 +3,6 @@ import os
 import sys 
 import time
 import configparser
-import argparse
 from Server import Server
 
 CONF_FILE = "arma2autojoin.cfg"
