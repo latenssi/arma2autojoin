@@ -44,7 +44,7 @@ def main(host, port):
 	while True:
 		max_players = int(s.info['maxplayers'])
 		cur_players = int(s.info['numplayers'])
-		print("Players: %d/%d" % (cur_players, max_players), end='\n')
+		print("Players: %d/%d" % (cur_players, max_players), end='\r')
 		if cur_players < max_players:
 			print("\nJoining the server..")
 			
