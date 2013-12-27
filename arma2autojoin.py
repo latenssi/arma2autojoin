@@ -4,17 +4,8 @@ import sys
 import time
 from Server import Server
 
-def main(hostport):
+def main(host, port):
 
-	if hostport:
-		split = hostport.split(':')
-		host = split[0]
-		port = int(split[1])
-	else:
-		#host = r"193.111.140.42"
-		host = r"144.76.99.229"
-		port = 2302
-		
 	mod = r"@dayz_epoch"
 	
 	arma_path = r"C:\Program Files (x86)\Steam\steamapps\common\Arma 2"
@@ -70,7 +61,11 @@ def main(hostport):
 if __name__ == "__main__":
 	try:
 		hostport = str(sys.argv[1])
-	except IndexError:
-		hostport = ""
+		hostport = hostport.split(':')
+		host = hostport[0]
+		port = int(hostport[1])
+	except:
+		print("Invalid arguments. Use 'python arma2autojoin.py host:port'") 
+		sys.exit(2)
 		
-	main(hostport)
+	main(host, port)
