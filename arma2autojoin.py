@@ -35,14 +35,14 @@ class Arma2AutoJoin:
 			r"-world=empty",
 		]
 		
-		if self.cpu_count:
-			params.append(r"-cpuCount=%d" % self.cpucount)
+		if self.cpucount:
+			params.append(r"-cpuCount=%s" % self.cpucount)
 		
-		if self.ext_hreads:
-			params.append(r"-exThreads=%d" % self.exthreads)
+		if self.exthreads:
+			params.append(r"-exThreads=%s" % self.exthreads)
 			
-		if self.max_mem:
-			params.append(r"-maxmem=%d" % self.maxmem)
+		if self.maxmem:
+			params.append(r"-maxmem=%s" % self.maxmem)
 			
 		network = [r"-connect=%s" % self.host, r"-port=%d" % self.port]
 		
@@ -83,17 +83,19 @@ class Arma2AutoJoin:
 def main(host=None, port=None):
 	config = configparser.RawConfigParser()
 	config.read(CONF_FILE)
-	
-	if host:
-		config.set('Server', 'host', host)
+	try:
+		if host:
+			config.set('Server', 'host', host)
+			
+		if port:
+			config.set('Server', 'port', port)
 		
-	if port:
-		config.set('Server', 'port', port)
+		with open(CONF_FILE, 'w') as configfile:
+			config.write(configfile)
 	
-	with open(CONF_FILE, 'w') as configfile:
-		config.write(configfile)
-	
-	
+	except configparser.NoSectionError:
+		print ("No configuration file. Please copy the 'arma2autojoin.cfg.sample' and remove the '.sample'.")
+		sys.exit(2)
 	
 	aaj = Arma2AutoJoin(
 		config.get('Server', 'host'),
