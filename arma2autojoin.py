@@ -1,13 +1,22 @@
 import subprocess
 import os 
+import sys 
 import socket
 import struct
+import time
 from Server import Server
 
-def main():
-	#host = r"193.111.140.42"
-	host = r"144.76.99.229"
-	port = 2302
+def main(hostport):
+
+	if hostport:
+		split = hostport.split(':')
+		host = split[0]
+		port = int(split[1])
+	else:
+		#host = r"193.111.140.42"
+		host = r"144.76.99.229"
+		port = 2302
+		
 	mod = r"@dayz_epoch"
 	
 	arma_path = r"C:\Program Files (x86)\Steam\steamapps\common\Arma 2"
@@ -28,13 +37,42 @@ def main():
 	startup.extend(params)
 	startup.extend(network)
 	
-	#subprocess.call(startup)
-	
+	# Initialize the Server
 	s = Server(host, port)
-	s.query()
-	max_players = int(s.info['maxplayers'])
-	cur_players = int(s.info['numplayers'])
-	print("%d/%d" % (cur_players, max_players))
+
+	print("\nConnecting to %s at port %d..\n" % (host, port))
+	while True:
+		try:
+			s.query()
+		except:
+			print("Server not respoding. Retrying..")
+		else:
+			print("Connected.")
+			break
+			
+	print("\n%s\n" % s.info['hostname'])
+	
+	while True:
+		max_players = int(s.info['maxplayers'])
+		cur_players = int(s.info['numplayers'])
+		print("Players: %d/%d" % (cur_players, max_players), end='\n')
+		if cur_players < max_players:
+			print("\nJoining the server..")
+			
+			# Start the game and connect to the server
+			subprocess.call(startup)
+			
+			break
+			
+		time.sleep(5)
+		s.query()
+		
+	print("\nShutting down..")
 	
 if __name__ == "__main__":
-    main()
+	try:
+		hostport = str(sys.argv[1])
+	except IndexError:
+		hostport = ""
+		
+	main(hostport)
