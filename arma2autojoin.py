@@ -1,8 +1,6 @@
 import subprocess
 import os 
 import sys 
-import socket
-import struct
 import time
 from Server import Server
 
