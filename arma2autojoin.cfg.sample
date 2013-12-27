@@ -1,0 +1,13 @@
+[Settings]
+cpucount = 4
+exthreads = 7
+maxmem = 2047
+mod = @dayz_epoch
+
+[Folders]
+arma_path = C:\Program Files (x86)\Steam\steamapps\common\Arma 2
+oa_path = C:\Program Files (x86)\Steam\steamapps\common\arma 2 operation arrowhead
+
+[Server]
+host = 
+port = 2302
