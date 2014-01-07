@@ -47,22 +47,26 @@ class Server:
         self.port          = port       #port          (integer)
         self.info          = dict()
         self._final_string = ''         #Used Internally, Contains Final Unparsed Data Returned from Server
-        self.players = []               #list of players in Player Objects
 
    #---
    #Sequential Construct Methods (must be called in order)
     def query(self, timeout_secs = 5):
         """Query the Server to Return Server ".info" and ".players"
          Supply Timeout for connection, default is 5 seconds"""
-        self._connect(timeout_secs)
+        
+        # Reset data
+        self.info = dict()
+        self._final_string = ''
+
+        # Get data
         self._get_first_package()
         self._get_second_package()
+
         #Parse Data
         self._parse_recieved_data(self._final_string)
-        self._close()
 
     #-query()-Incapsulated Sequential Constructon Methods for Parent query Method-    
-    def _connect(self, timeout = 5):
+    def connect(self, timeout = 5):
         """Initial Socket Connection To Server"""
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Create Socket
         self._socket.connect((self.server_adress, self.port))                  #Create connection to server
@@ -113,8 +117,9 @@ class Server:
     #-/_get_second_package()-        
 
 
-    def _close(self):
+    def close(self):
         """Close Socket Connection"""
+        self._socket.shutdown()
         self._socket.close()
     #-/query()-
 
@@ -129,10 +134,9 @@ class Server:
 
 
     def _parse_recieved_data(self, data): #input raw list 1 with server info in bytes
-        info, playr   = self._seperate_info_players(data)   #Seperate Server Info and Player List 
+        info, playr   = self._seperate_info_players(data)   #Seperate Server Info and Player List, playr is ignored
         self.info     = self._server_info_dict(info)        #Create The Server info Dictionary
-        self.players  = self._server_player_list(playr)     #Create Player List (List of Objects)
-
+		
     #-_parse_recieved_data()-Incapsulated Methods for Parent _parce_recieved_data Method-  
     def _seperate_info_players(self, data):
         #seperate players and server info
@@ -153,81 +157,6 @@ class Server:
         info = dict(zip(info,info))
         return info
 
-    def _server_player_list(self, playr):
-        """Create list of Player Objects"""
-        #Now Parse the Player info
-        #Consider Breaking this up by Game
-
-        #--ARMA2 TESTING RESULT COMMENTS BELOW--
-        #Empty value at start of players_ empty at end
-        #Empty value at start of score_  empty at end
-        #Empty value at start of team_  empty at end
-        #Empty value at start of deaths_ x2 empty at end
-        #X02 Ends Package followed by empty value
-        #--/
-
-        list_of_players = [] #This is the Player List that will be returned
-        #Holding Lists to Create Player Objects
-        playerz = []
-        score   = []
-        team    = []
-        deaths  = []
-
-        #Now Parse the Player info
-        list_to_use = ''
-        for each in playr:
-            if each == 'player_':
-                list_to_use = 'playerz'
-                continue
-            elif each == 'score_':
-                list_to_use = 'score'
-                continue
-            elif each == 'team_':
-                list_to_use = 'team'
-                continue
-            elif each == 'deaths_':
-                list_to_use = 'deaths'
-                continue
-            elif each == '':  #Remove Empties
-                continue
-            elif each.startswith('\'\\x01'):  #Multiple Packages carry  additional x01
-                continue
-            else:
-                pass
-
-            #Creating Seqential Lists of Stats
-            if list_to_use == 'playerz':
-                playerz.append(each)
-            elif list_to_use == 'score':
-                score.append(each)
-            elif list_to_use == 'team':
-                team.append(each)
-            elif list_to_use == 'deaths':
-                deaths.append(each)
-        #ARMA2 Tested - Need to Remove Empty Player Values (see comments at line 145 - 150)
-        only_player_name = False  #Assume its not ARMA2 Server Initially 
-        try:
-            deaths.pop()
-            deaths.pop()
-        except IndexError:   #Not ARMA2 Server if it did not have score,team,deaths
-            only_player_name = True  #Only going to return Player Name
-            pass
-
-        x = 0
-        #Combine Sequential List of Stats and Create Objects Here
-        for each in playerz:
-            if only_player_name == True:  #Probably Not ARMA2 Server: Only Create with Player Name
-                list_of_players.append(Player(each))
-
-            #elif only_player_name == False: #Tested with ARMA2 Servers: Playe, Score, Team, Deaths  #HAVE NOT GOT WORKING YET
-                #list_of_players.append(Player(each, score[x], deaths = deaths[x])) #Need Team
-
-            elif only_player_name == False: #Tested with ARMA2 Servers: Playe, Score, Team, Deaths
-                list_of_players.append(Player(each)) #Need Team
-            x = x + 1
-
-            
-        return list_of_players  #return the list of player Objects to Server Object list
     #-/_parse_recieved_data()-
 
     
@@ -235,21 +164,4 @@ class Server:
    #Reuseable Methods
     def reset_server(self, server, port):
         #Reset Server Adress
-        self.__init__(server, port)
-
-#---------------------------------------------------------
-#---------------------------------------------------------
-
-class Player:
-    """Player class"""
-    def __init__(self, name, score= None, team = None, deaths = None):
-        self.name   = name
-        self.score  = score
-        self.team   = team
-        self.deaths = deaths
-
-
-
-
-
-    
+        self.__init__(server, port)  

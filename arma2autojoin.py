@@ -3,6 +3,8 @@ import os
 import sys 
 import time
 import configparser
+import re
+from random import randint
 from Server import Server
 
 CONF_FILE = "arma2autojoin.cfg"
@@ -20,6 +22,7 @@ class Arma2AutoJoin:
 		self.cpucount = cpucount
 		self.exthreads = exthreads
 		self.maxmem = maxmem
+		self.server_mon = Server(self.host, self.port)
 		
 	def connect(self):
 		os.chdir(self.oa_path)
@@ -55,29 +58,45 @@ class Arma2AutoJoin:
 		subprocess.call(startup)
 	
 	def monitor(self, auto_connect=False):
+		self.server_mon.connect()
+		
+		# Get initial info so we can print the hostname
+		self._query()
+		print("%s\n" % self.server_mon.info['hostname'])
+		
+		old_cur_players = 0
+		
 		while True:
-			self._query()
 			max_players = int(self.server_mon.info['maxplayers'])
 			cur_players = int(self.server_mon.info['numplayers'])
-			print("Players: %d/%d" % (cur_players, max_players), end='\r')
+			
+			if old_cur_players != cur_players:
+				old_cur_players = cur_players
+				print("Players: %d/%d" % (cur_players, max_players), end='\r')
+				
 			if auto_connect and cur_players < max_players:
 				break
-			time.sleep(5)
+				
+			time.sleep(randint(1, 1))
+			self._query()
+			
+		self.server_mon.close()
 		
 		if auto_connect:
 			self.connect()
-			
+		
+		
 	def _query(self):
-		if not self.server_mon and (self.host and self.port):
-			self.server_mon = Server(self.host, self.port)
-			
+
 		while True:
 			try:
 				self.server_mon.query()
 			except:
-				print("Server not respoding. Retrying..")
+				print("Server not respoding. Retrying in 5 seconds..")
+				time.sleep(5)
 			else:
 				break
+
 		
 def main(host=None, port=None):
 	config = configparser.RawConfigParser()
@@ -106,19 +125,12 @@ def main(host=None, port=None):
 		exthreads=config.get('Settings', 'exThreads'),
 		maxmem=config.get('Settings', 'maxmem'),
 		)
-	aaj.monitor(auto_connect=True)
+		
+	aaj.monitor(auto_connect=False)
 	
 if __name__ == "__main__":
 	try:
-		hostport = str(sys.argv[1])
-		hostport = hostport.split(':')
-		host = hostport[0]
-		port = int(hostport[1])
-	except:
-		port = None
-		try:
-			host = str(sys.argv[1])
-		except:
-			host = None
-
-	main(host=host, port=port)
+		kwargs = re.match( r'(?P<host>\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})(:(?P<port>\d+))?', sys.argv[1] ).groupdict()
+	except (IndexError, AttributeError):
+		kwargs = {'host': None, 'port': None}
+	main(**kwargs)
