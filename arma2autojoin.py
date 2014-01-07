@@ -126,7 +126,7 @@ def main(host=None, port=None):
 		maxmem=config.get('Settings', 'maxmem'),
 		)
 		
-	aaj.monitor(auto_connect=False)
+	aaj.monitor(auto_connect=True)
 	
 if __name__ == "__main__":
 	try:
