@@ -119,7 +119,7 @@ class Server:
 
     def close(self):
         """Close Socket Connection"""
-        self._socket.shutdown()
+        self._socket.shutdown(socket.SHUT_RDWR)
         self._socket.close()
     #-/query()-
 
