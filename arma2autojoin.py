@@ -4,7 +4,7 @@ import sys
 import time
 import configparser
 import re
-from random import randint
+import random
 from Server import Server
 
 CONF_FILE = "arma2autojoin.cfg"
@@ -57,27 +57,27 @@ class Arma2AutoJoin:
 		
 		subprocess.call(startup)
 	
-	def monitor(self, auto_connect=False):
+	def monitor(self, auto_connect=False, max_sleep_time=3, extra_leeway=1):
 		self.server_mon.connect()
 		
 		# Get initial info so we can print the hostname
 		self._query()
 		print("%s\n" % self.server_mon.info['hostname'])
-		
+
+		max_players = int(self.server_mon.info['maxplayers'])
 		old_cur_players = 0
 		
 		while True:
-			max_players = int(self.server_mon.info['maxplayers'])
 			cur_players = int(self.server_mon.info['numplayers'])
 			
 			if old_cur_players != cur_players:
 				old_cur_players = cur_players
 				print("Players: %d/%d" % (cur_players, max_players), end='\r')
 				
-			if auto_connect and cur_players < max_players:
+			if auto_connect and cur_players < (max_players - extra_leeway):
 				break
 				
-			time.sleep(randint(1, 1))
+			time.sleep(random.random() * (max_sleep_time - 1) + 1)  # Sleep between 1 and 'sleep_time' seconds
 			self._query()
 			
 		self.server_mon.close()
@@ -92,7 +92,7 @@ class Arma2AutoJoin:
 			try:
 				self.server_mon.query()
 			except:
-				print("Server not respoding. Retrying in 5 seconds..")
+				print("Server not responding. Retrying in 5 seconds..")
 				time.sleep(5)
 			else:
 				break
