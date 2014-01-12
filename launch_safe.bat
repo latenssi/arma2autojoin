@@ -1,0 +1,1 @@
+C:\Python33\python.exe arma2autojoin.py
